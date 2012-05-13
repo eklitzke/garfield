@@ -4,6 +4,7 @@
 #define SRC_GARFIELD_H_
 
 #include "./request.h"
+#include "./response.h"
 #include "./server.h"
 
 #endif  // SRC_GARFIELD_H_
