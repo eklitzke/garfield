@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# A fake "configure" script to invoke gyp properly to build the Makefile
+
+set -u
+
+function invoke_gyp {
+  gyp --toplevel-dir=. --depth=src/ --generator-output=build garfield.gyp 2>/dev/null
+}
+
+rm -rf build
+
+# due to a bug in the gyp on F17, we might need to run this twice
+invoke_gyp
+if [ $? -ne 0 ]; then
+  invoke_gyp
+  if [ $? -ne 0 ]; then
+    echo "Failed to create Makefile!"
+    exit 1
+  fi
+fi
+
+echo "Created Makefile; type \"make\" to proceed."
