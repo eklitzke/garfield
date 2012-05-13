@@ -8,7 +8,7 @@ Garfield to be "just for fun". You might find the source code useful if you're
 learning about boost::asio.
 
 Usage
-=====
+-----
 
 When you build Garfield, it will actually build a shared library
 (e.g. `libgarfield.so` on Linux systems). It's up to you to write a program that
@@ -17,3 +17,13 @@ links against Garfield. There is no stand-alone server program.
 There's a sample program included, `example-server.cc`, that illustrates how to
 write a simple program that uses Garfield. The included Makefile with this
 project will build the example server, so you can run it and test it out.
+
+Limitations
+-----------
+
+Garfield does not currently support any of the following features:
+
+* Keep-Alive connections
+* Chunked transfer-encoding
+* default URL handlers (e.g. for custom 404 pages)
+* gzip/deflate encoding, or any other transforms

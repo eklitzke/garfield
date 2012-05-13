@@ -14,6 +14,7 @@
       'target_name': 'libgarfield',
       'sources': [
         'src/connection.cc',
+        'src/handlers.cc',
         'src/headers.cc',
         'src/request.cc',
         'src/response.cc',

@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "./connection.h"
+#include "./handlers.h"
 #include "./request.h"
 #include "./response.h"
 
@@ -55,51 +56,48 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     delete req;
     return;
   }
-  bool found = false;
-  Handler handler;
+  Handler handler = NotFoundHandler;
   for (auto route : routes_) {
     if (boost::regex_match(req->path, route.first)) {
       handler = route.second;
-      found = true;
       break;
     }
   }
-  if (found) {
-    Response *resp = new Response();;
-    resp->headers()->AddHeader("Server", "garfield/0.1");
-    resp->headers()->AddHeader("Connection", "close");
-    resp->headers()->AddHeader("Content-Type", "text/html");
-    handler(req, resp);
 
-    std::string response_header = "HTTP/1.1 ";
-    response_header += boost::lexical_cast<std::string>(resp->status());
-    response_header += " ";
-    response_header += resp->GetStatusName();
-    response_header += "\r\n";
+  Response *resp = new Response();
+  resp->headers()->AddHeader("Server", "garfield/0.1");
+  resp->headers()->AddHeader("Connection", "close");
+  resp->headers()->AddHeader("Content-Type", "text/html");
+  handler(req, resp);
 
-    std::size_t bytes = 0;
-    std::vector<boost::asio::const_buffer> send_bufs;
-    send_bufs.push_back(boost::asio::buffer(response_header, response_header.size()));
-    send_bufs.push_back(boost::asio::buffer("\r\n", 2));
-    for (const std::string chunk : resp->output()) {
-      send_bufs.push_back(boost::asio::buffer(chunk, chunk.size()));
-      bytes += chunk.size();
-    }
-    resp->headers()->SetHeader("Content-Length", boost::lexical_cast<std::string>(bytes));
-    std::string hdrs = resp->headers()->GetHeadersAsString();
-    send_bufs.insert(send_bufs.begin() + 1, boost::asio::buffer(hdrs, hdrs.size()));
+  std::string response_header = "HTTP/1.1 ";
+  response_header += boost::lexical_cast<std::string>(resp->status());
+  response_header += " ";
+  response_header += resp->GetStatusName();
+  response_header += "\r\n";
 
-    std::size_t expected_size = 0;
-    for (const boost::asio::const_buffer &buf : send_bufs) {
-      expected_size += boost::asio::buffer_size(buf);
-    }
-
-    boost::asio::async_write(*conn->sock(), send_bufs,
-                             std::bind(&HTTPServer::OnWrite, this, conn, req,
-                                       resp, expected_size,
-                                       std::placeholders::_1,
-                                       std::placeholders::_2));
+  std::size_t bytes = 0;
+  std::vector<boost::asio::const_buffer> send_bufs;
+  send_bufs.push_back(boost::asio::buffer(response_header, response_header.size()));
+  send_bufs.push_back(boost::asio::buffer("\r\n", 2));
+  for (const std::string chunk : resp->output()) {
+    send_bufs.push_back(boost::asio::buffer(chunk, chunk.size()));
+    bytes += chunk.size();
   }
+  resp->headers()->SetHeader("Content-Length", boost::lexical_cast<std::string>(bytes));
+  std::string hdrs = resp->headers()->GetHeadersAsString();
+  send_bufs.insert(send_bufs.begin() + 1, boost::asio::buffer(hdrs, hdrs.size()));
+
+  std::size_t expected_size = 0;
+  for (const boost::asio::const_buffer &buf : send_bufs) {
+    expected_size += boost::asio::buffer_size(buf);
+  }
+
+  boost::asio::async_write(*conn->sock(), send_bufs,
+                           std::bind(&HTTPServer::OnWrite, this, conn, req,
+                                     resp, expected_size,
+                                     std::placeholders::_1,
+                                     std::placeholders::_2));
 }
 
 void HTTPServer::OnWrite(Connection *conn, Request *req, Response *resp,

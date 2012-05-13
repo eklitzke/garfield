@@ -14,13 +14,11 @@
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 
+#include "./handlers.h"
 #include "./request.h"
 #include "./response.h"
 
 namespace garfield {
-
-typedef std::function<void(Request *, Response *)> Handler;
-
 class HTTPServer {
  public:
   HTTPServer(boost::asio::io_service *io_service);
