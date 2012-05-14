@@ -1,7 +1,7 @@
 # -*- python -*-
 {
   'target_defaults': {
-    'cflags': ['-pedantic', '-Wall', '-std=c++11'],
+    'cflags': ['-pedantic', '-Wall', '-std=c++0x'],
     'libraries': [
       '-lboost_system',
       '-pthread',
