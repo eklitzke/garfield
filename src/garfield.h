@@ -4,6 +4,7 @@
 #define SRC_GARFIELD_H_
 
 #include "./handlers.h"
+#include "./logging.h"
 #include "./request.h"
 #include "./response.h"
 #include "./server.h"

@@ -9,13 +9,14 @@
   },
   'targets': [
     {
-      'type': 'shared_library',
+      'type': 'static_library',
       'cflags': ['-fPIC'],
       'target_name': 'libgarfield',
       'sources': [
         'src/connection.cc',
         'src/handlers.cc',
         'src/headers.cc',
+        'src/logging.cc',
         'src/request.cc',
         'src/response.cc',
         'src/server.cc',

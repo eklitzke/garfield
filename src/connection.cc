@@ -10,6 +10,8 @@
 #include <functional>
 #include <iostream>
 
+#include "./logging.h"
+
 namespace {
 const boost::regex request_line("^(\\u+) (.*) HTTP/1\\.([01])$");
 const boost::regex header_line("^([-a-zA-Z0-9_]+):\\s+(.*?)$");
@@ -68,6 +70,7 @@ void Connection::OnHeaders(Request *req,
       req->method = what[1];
       req->path = what[2];
       req->version = std::make_pair(1, what[3] == "0" ? 0 : 1);
+      Log(ACCESS, "%s %s from peer", req->method.c_str(), req->path.c_str());
     } else if (line == "") {
       break;
     } else {

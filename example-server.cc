@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
   }
 
   boost::asio::io_service ios;
+  garfield::SetLogger(garfield::StdErrLogger);
   garfield::HTTPServer server(&ios);
   server.Bind(vm["port"].as<int>());
   server.AddRoute("/", HelloWorldHandler);

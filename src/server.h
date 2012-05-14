@@ -1,8 +1,8 @@
 // -*- C++ -*-
 // Copyright 2012, Evan Klitzke <evan@eklitzke.org>
 
-#ifndef SERVER_H_
-#define SERVER_H_
+#ifndef SRC_SERVER_H_
+#define SRC_SERVER_H_
 
 #include "./connection.h"
 
@@ -61,4 +61,4 @@ class HTTPServer {
 };
 }
 
-#endif  // SERVER_H_
+#endif  // SRC_SERVER_H_

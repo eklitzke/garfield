@@ -10,6 +10,7 @@
 
 #include "./connection.h"
 #include "./handlers.h"
+#include "./logging.h"
 #include "./request.h"
 #include "./response.h"
 
@@ -104,8 +105,14 @@ void HTTPServer::OnWrite(Connection *conn, Request *req, Response *resp,
                          std::size_t expected_size,
                          const boost::system::error_code& error,
                          std::size_t bytes_transferred) {
-  assert(!error);
-  assert(expected_size == bytes_transferred);
+  if (error) {
+	std::string errstring = boost::lexical_cast<std::string>(error);
+	Log(ERROR, "got boost::asio error %s during write", errstring.c_str());
+  }
+  if (expected_size != bytes_transferred) {
+	Log(ERROR, "expected to write %zd bytes during request, but only wrote %zd",
+		expected_size, bytes_transferred);
+  }
   delete conn;
   delete req;
   delete resp;
