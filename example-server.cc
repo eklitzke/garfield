@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
   garfield::HTTPServer server(&ios);
   server.Bind(vm["port"].as<int>());
   server.AddRoute("/", HelloWorldHandler);
+  server.AddRoute(".*", garfield::StaticFileHandler);
   ios.run();  // start the main loop
   return 0;
 }

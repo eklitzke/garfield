@@ -3,6 +3,7 @@
 #ifndef SRC_GARFIELD_H_
 #define SRC_GARFIELD_H_
 
+#include "./handlers.h"
 #include "./request.h"
 #include "./response.h"
 #include "./server.h"
