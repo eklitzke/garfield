@@ -25,7 +25,7 @@ class Request {
   std::string peername;
 
   // Get the connection time.
-  const boost::posix_time::microsec_clock& connection_time() const {
+  const boost::posix_time::ptime& connection_time() const {
     return connection_time_;
   }
 
@@ -34,7 +34,7 @@ class Request {
   boost::asio::streambuf streambuf;
 
  private:
-  boost::posix_time::microsec_clock connection_time_;
+  boost::posix_time::ptime connection_time_;
   HeadersDict headers_;
 };
 }
