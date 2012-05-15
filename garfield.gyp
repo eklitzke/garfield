@@ -55,7 +55,7 @@
       'libraries': [
         '-lboost_program_options',
       ],
-      'dependencies': ['libgarfield'],
+      'dependencies': ['garfield_static'],
       'sources': [
         'file-server.cc',
       ],
