@@ -36,6 +36,19 @@
       ],
     },
     {
+      'target_name': 'file-server',
+      'type': 'executable',
+      'cflags': ['-g'],
+      'libraries': [
+        '-lboost_program_options',
+        '-lboost_regex',
+      ],
+      'dependencies': ['libgarfield'],
+      'sources': [
+        'file-server.cc',
+      ],
+    },
+    {
       'target_name': 'http_bench',
       'type': 'executable',
       'libraries': [
