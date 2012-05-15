@@ -1,14 +1,42 @@
 #include "./logging.h"
 
+#include <boost/date_time/local_time/local_time.hpp>
+
 #include <cstdarg>
 #include <cstdio>
 #include <memory>
+#include <sstream>
 #include <string>
 
 namespace {
 enum { LOG_BUF_SIZE = 4096 };
 bool initialized = false;
 garfield::Logger active_logger;
+
+std::string FormatMsg(const char *msg, int bytes) {
+  boost::local_time::local_time_facet *facet(
+      new boost::local_time::local_time_facet("%Y-%m-%d %H:%M:%S.%f"));
+  std::stringstream date_stream;
+  date_stream.imbue(std::locale(date_stream.getloc(), facet));
+  date_stream << boost::local_time::local_microsec_clock::local_time(boost::local_time::time_zone_ptr());
+
+  std::string formatted;
+  formatted += date_stream.str();
+  formatted += " ";
+  formatted += std::string(msg, bytes);
+  if (formatted[formatted.size() - 1] != '\n') {
+    formatted += '\n';
+  }
+  return formatted;
+}
+
+FILE *err_stream = nullptr;
+FILE *access_stream = nullptr;
+
+void FileWrite(const std::string &msg, FILE *out) {
+  fwrite(msg.c_str(), sizeof(char), msg.length(), out);
+  fflush(out);
+}
 }
 
 namespace garfield {
@@ -37,11 +65,25 @@ void Log(LogLevel level, const char *fmt, ...) {
 }
 
 void StdErrLogger(LogLevel level, const char *msg, int bytes) {
-  std::string cmsg = (level == ERROR ? "ERROR:  " : "ACCESS: ");
-  cmsg += std::string(msg, bytes);
-  if (cmsg[cmsg.length() - 1] != '\n') {
-    cmsg += '\n';
+  std::string cmsg = FormatMsg(msg, bytes);
+  cmsg = (level == ERROR ? "[ERROR]  " : "[ACCESS] ") + cmsg;
+  FileWrite(cmsg, stderr);
+}
+
+void FileLogger(LogLevel level, const char *msg, int bytes) {
+  std::string cmsg = FormatMsg(msg, bytes);
+  FILE *stream;
+  if (level == ERROR) {
+    if (err_stream == nullptr) {
+      err_stream = fopen("error.log", "a");
+    }
+    stream = err_stream;
+  } else {
+    if (access_stream == nullptr) {
+      access_stream = fopen("access.log", "a");
+    }
+    stream = access_stream;
   }
-  fwrite(cmsg.c_str(), sizeof(char), cmsg.length(), stderr);
+  FileWrite(cmsg, stream);
 }
 }

@@ -19,6 +19,7 @@ void Log(LogLevel level, const char *fmt, ...);
 Logger GetLogger();
 void SetLogger(Logger);
 
+void FileLogger(LogLevel level, const char *msg, int bytes);
 void StdErrLogger(LogLevel level, const char *msg, int bytes);
 }
 
