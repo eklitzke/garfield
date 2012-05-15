@@ -4,14 +4,28 @@
     'cflags': ['-pedantic', '-Wall', '-std=c++0x'],
     'libraries': [
       '-lboost_system',
+      '-lboost_regex',
       '-pthread',
     ],
   },
   'targets': [
     {
-      'type': 'static_library',
+      'type': 'shared_library',
       'cflags': ['-fPIC'],
       'target_name': 'libgarfield',
+      'sources': [
+        'src/connection.cc',
+        'src/handlers.cc',
+        'src/headers.cc',
+        'src/logging.cc',
+        'src/request.cc',
+        'src/response.cc',
+        'src/server.cc',
+      ],
+    },
+    {
+      'type': 'static_library',
+      'target_name': 'garfield_static',
       'sources': [
         'src/connection.cc',
         'src/handlers.cc',
@@ -28,9 +42,8 @@
       'cflags': ['-g'],
       'libraries': [
         '-lboost_program_options',
-        '-lboost_regex',
       ],
-      'dependencies': ['libgarfield'],
+      'dependencies': ['garfield_static'],
       'sources': [
         'example-server.cc',
       ],
@@ -41,7 +54,6 @@
       'cflags': ['-g'],
       'libraries': [
         '-lboost_program_options',
-        '-lboost_regex',
       ],
       'dependencies': ['libgarfield'],
       'sources': [
