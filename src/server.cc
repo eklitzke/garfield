@@ -2,6 +2,7 @@
 
 #include "./server.h"
 
+#include <boost/date_time/local_time/local_time.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <iostream>
@@ -13,6 +14,16 @@
 #include "./logging.h"
 #include "./request.h"
 #include "./response.h"
+
+namespace {
+const char* FmtLogField(const std::string &field) {
+  if (field.empty()) {
+    return "-";
+  } else {
+    return field.c_str();
+  }
+}
+}
 
 namespace garfield {
 HTTPServer::HTTPServer(boost::asio::io_service *io_service)
@@ -104,6 +115,22 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
                                      resp, expected_size,
                                      std::placeholders::_1,
                                      std::placeholders::_2));
+
+  boost::local_time::local_time_facet *facet(
+      new boost::local_time::local_time_facet("%Y-%m-%d %H:%M:%S.%f"));
+  std::stringstream date_stream;
+  date_stream.imbue(std::locale(date_stream.getloc(), facet));
+  date_stream << boost::local_time::local_microsec_clock::local_time(boost::local_time::time_zone_ptr());
+  Log(ACCESS, "%s [%s] \"%s %s HTTP/1.%d\" %d %zd \"%s\" \"%s\"",
+      req->peername.c_str(),
+      date_stream.str().c_str(),
+      req->method.c_str(),
+      req->path.c_str(),
+      req->version.second,
+      resp->status(),
+      expected_size,
+      FmtLogField(req->headers()->GetHeader("Referer")),
+      FmtLogField(req->headers()->GetHeader("User-Agent")));
 }
 
 void HTTPServer::OnWrite(Connection *conn, Request *req, Response *resp,

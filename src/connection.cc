@@ -28,6 +28,11 @@ void Connection::NotifyConnected() {
   assert(state_ == UNCONNECTED);
   state_ = WAITING_FOR_HEADERS;
   Request *req = new Request();
+
+  boost::asio::ip::tcp::endpoint remote_ep = sock_->remote_endpoint();
+  boost::asio::ip::address remote_ad = remote_ep.address();
+  req->peername = remote_ad.to_string();
+
   boost::asio::async_read_until(
       *sock_, req->streambuf, "\r\n\r\n",
       std::bind(
@@ -70,8 +75,6 @@ void Connection::OnHeaders(Request *req,
       req->method = what[1];
       req->path = what[2];
       req->version = std::make_pair(1, what[3] == "0" ? 0 : 1);
-      Log(ACCESS, "\"%s %s HTTP/1.%d\" from peer", req->method.c_str(),
-          req->path.c_str(), req->version.second);
     } else if (line == "") {
       break;
     } else {

@@ -22,6 +22,7 @@ class Request {
   std::string method;
   std::string path;
   std::pair<int, int> version;
+  std::string peername;
 
   // Get the connection time.
   const boost::posix_time::microsec_clock& connection_time() const {

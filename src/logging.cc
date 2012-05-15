@@ -1,7 +1,5 @@
 #include "./logging.h"
 
-#include <boost/date_time/local_time/local_time.hpp>
-
 #include <cstdarg>
 #include <cstdio>
 #include <memory>
@@ -14,16 +12,7 @@ bool initialized = false;
 garfield::Logger active_logger;
 
 std::string FormatMsg(const char *msg, int bytes) {
-  boost::local_time::local_time_facet *facet(
-      new boost::local_time::local_time_facet("%Y-%m-%d %H:%M:%S.%f"));
-  std::stringstream date_stream;
-  date_stream.imbue(std::locale(date_stream.getloc(), facet));
-  date_stream << boost::local_time::local_microsec_clock::local_time(boost::local_time::time_zone_ptr());
-
-  std::string formatted = "[";
-  formatted += date_stream.str();
-  formatted += "] ";
-  formatted += std::string(msg, bytes);
+  std::string formatted = std::string(msg, bytes);
   if (formatted[formatted.size() - 1] != '\n') {
     formatted += '\n';
   }
