@@ -154,13 +154,17 @@ std::string GuessMimeType(const std::string &extension) {
     return it->second;
   }
 }
+
+void NotFound(garfield::Response *resp) {
+  resp->set_status(404);
+  resp->headers()->SetHeader("Content-Type", "text/plain");
+  resp->Write("The page you were looking for could not be found.\n");
+}
 }
 
 namespace garfield {
 void NotFoundHandler(Request *req, Response *resp) {
-  resp->set_status(404);
-  resp->headers()->SetHeader("Content-Type", "text/plain");
-  resp->Write("The page you were looking for could not be found.\n");
+  NotFound(resp);
 }
 
 void StaticFileHandler(Request *req, Response *resp) {
@@ -169,12 +173,12 @@ void StaticFileHandler(Request *req, Response *resp) {
     path = path.substr(1, path.size() - 1);
   }
   if (path.empty()) {
-    resp->set_status(404);
+    NotFound(resp);
   } else {
     std::unique_ptr<char[]> rp_buf(new char[PATH_MAX]);
     char *rp_cstr = realpath(path.c_str(), rp_buf.get());
     if (rp_cstr == nullptr) {
-      resp->set_status(404);
+      NotFound(resp);
       return;
     }
     std::string rp(rp_cstr);
@@ -184,11 +188,11 @@ void StaticFileHandler(Request *req, Response *resp) {
     
     // Ensure that the realpath is in a subdirectory of the current directory
     if (rp.substr(0, curdir.length()) != curdir) {
-      resp->set_status(404);
+      NotFound(resp);
     } else {
       FILE *f = fopen(rp_cstr, "r");
       if (f == nullptr) {
-        resp->set_status(404);
+        NotFound(resp);
         return;
       }
 
