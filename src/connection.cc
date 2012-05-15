@@ -70,7 +70,8 @@ void Connection::OnHeaders(Request *req,
       req->method = what[1];
       req->path = what[2];
       req->version = std::make_pair(1, what[3] == "0" ? 0 : 1);
-      Log(ACCESS, "%s %s from peer", req->method.c_str(), req->path.c_str());
+      Log(ACCESS, "\"%s %s HTTP/1.%d\" from peer", req->method.c_str(),
+          req->path.c_str(), req->version.second);
     } else if (line == "") {
       break;
     } else {

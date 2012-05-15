@@ -57,6 +57,7 @@ void InitializeMimetypes() {
   mimetypes.insert(mimetypes.end(), std::make_pair("js", "application/x-javascript"));
   mimetypes.insert(mimetypes.end(), std::make_pair("ksh", "text/plain"));
   mimetypes.insert(mimetypes.end(), std::make_pair("latex", "application/x-latex"));
+  mimetypes.insert(mimetypes.end(), std::make_pair("log", "text/plain"));
   mimetypes.insert(mimetypes.end(), std::make_pair("m1v", "video/mpeg"));
   mimetypes.insert(mimetypes.end(), std::make_pair("man", "application/x-troff-man"));
   mimetypes.insert(mimetypes.end(), std::make_pair("me", "application/x-troff-me"));

@@ -17,7 +17,6 @@ int main(int argc, char **argv) {
   po::options_description desc("Allowed options");
   desc.add_options()
       ("help", "produce help message")
-      ("log-to-stderr", "log to stderr instead of files")
       ("port,p", po::value<int>()->default_value(8000),
        "the port to bind on")
       ;
@@ -32,11 +31,7 @@ int main(int argc, char **argv) {
   }
 
   boost::asio::io_service io;
-  if (vm.count("log-to-stderr")) {
-    garfield::SetLogger(garfield::StdErrLogger);
-  } else {
-    garfield::SetLogger(garfield::FileLogger);
-  }
+  garfield::SetLogger(garfield::StdErrLogger);
   garfield::HTTPServer server(&io);
   server.Bind(vm["port"].as<int>());
   server.AddRoute("/", HelloWorldHandler);

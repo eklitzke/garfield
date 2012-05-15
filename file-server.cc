@@ -7,6 +7,7 @@
 #include <boost/asio.hpp>
 #include <boost/program_options.hpp>
 
+#include <functional>
 #include <iostream>
 #include <string>
 
@@ -18,6 +19,12 @@ void DropPrivileges(const std::string &user) {
   passwd *pwent = getpwnam(user.c_str());
   setgid(pwent->pw_gid);
   setuid(pwent->pw_uid);
+}
+
+void MapIndexFile(const std::string &index, garfield::Request *req) {
+  if (req->path == "/") {
+    req->path = index;
+  }
 }
 
 void Daemonize(boost::asio::io_service *io_service, const std::string &dir) {
@@ -77,6 +84,8 @@ int main(int argc, char **argv) {
   desc.add_options()
       ("help", "produce help message")
       ("log-to-stderr", "log to stderr instead of files")
+      ("index-file", po::value<std::string>(),
+       "the index file to use when mapping /")
       ("port,p", po::value<int>()->default_value(8000),
        "the port to bind on")
       ("daemon", "run as a daemon")
@@ -110,6 +119,11 @@ int main(int argc, char **argv) {
     garfield::SetLogger(garfield::FileLogger);
   }
   garfield::HTTPServer server(&io);
+  if (!vm["index-file"].empty()) {
+    server.AddRequestTransform(std::bind(MapIndexFile,
+                                         vm["index-file"].as<std::string>(),
+                                         std::placeholders::_1));
+  }
   server.AddRoute(".*", garfield::StaticFileHandler);
   server.Bind(vm["port"].as<int>());
   if (vm.count("daemon")) {

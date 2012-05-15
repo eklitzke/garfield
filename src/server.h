@@ -19,13 +19,28 @@
 #include "./response.h"
 
 namespace garfield {
+
+typedef std::function<void(Request *)> RequestTransform;
+
 class HTTPServer {
  public:
   HTTPServer(boost::asio::io_service *io_service);
+
+  // Add a route to the server
   void AddRoute(const std::string &route, Handler handler);
+
+  // Add a Request transform; this transform will be run on the request before
+  // the request is mapped.
+  void AddRequestTransform(RequestTransform t) {
+    request_transforms_.push_back(t);
+  }
+
+  // Bind the server to a given port.
   void Bind(int port);
+
  private:
   std::vector<std::pair<boost::regex, Handler> > routes_;
+  std::vector<RequestTransform> request_transforms_;
   boost::asio::io_service &io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
   boost::asio::streambuf request_data_;

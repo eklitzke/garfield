@@ -20,9 +20,9 @@ std::string FormatMsg(const char *msg, int bytes) {
   date_stream.imbue(std::locale(date_stream.getloc(), facet));
   date_stream << boost::local_time::local_microsec_clock::local_time(boost::local_time::time_zone_ptr());
 
-  std::string formatted;
+  std::string formatted = "[";
   formatted += date_stream.str();
-  formatted += " ";
+  formatted += "] ";
   formatted += std::string(msg, bytes);
   if (formatted[formatted.size() - 1] != '\n') {
     formatted += '\n';

@@ -57,6 +57,11 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     delete req;
     return;
   }
+
+  for (RequestTransform transform : request_transforms_) {
+    transform(req);
+  }
+
   Handler handler = NotFoundHandler;
   for (auto route : routes_) {
     if (boost::regex_match(req->path, route.first)) {
