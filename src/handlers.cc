@@ -16,8 +16,8 @@ enum { READ_SIZE = 8192 };
 
 std::map<std::string, std::string> mimetypes;
 
-// Initialize the mimetypes mapping; this list was created from the Python
-// mimetypes module.
+// Initialize the mimetypes mapping; this list was (mostly) created from the
+// Python mimetypes module.
 void InitializeMimetypes() {
   mimetypes.insert(mimetypes.end(), std::make_pair("a", "application/octet-stream"));
   mimetypes.insert(mimetypes.end(), std::make_pair("ai", "application/postscript"));
@@ -31,6 +31,7 @@ void InitializeMimetypes() {
   mimetypes.insert(mimetypes.end(), std::make_pair("bin", "application/octet-stream"));
   mimetypes.insert(mimetypes.end(), std::make_pair("bmp", "image/x-ms-bmp"));
   mimetypes.insert(mimetypes.end(), std::make_pair("c", "text/plain"));
+  mimetypes.insert(mimetypes.end(), std::make_pair("cc", "text/plain"));
   mimetypes.insert(mimetypes.end(), std::make_pair("cdf", "application/x-netcdf"));
   mimetypes.insert(mimetypes.end(), std::make_pair("cpio", "application/x-cpio"));
   mimetypes.insert(mimetypes.end(), std::make_pair("csh", "application/x-csh"));

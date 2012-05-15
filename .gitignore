@@ -2,3 +2,4 @@
 build/
 example-server
 http_bench
+*.log
