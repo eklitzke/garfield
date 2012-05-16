@@ -4,9 +4,8 @@
 #ifndef SRC_HEADERS_H_
 #define SRC_HEADERS_H_
 
+#include <map>
 #include <string>
-#include <utility>
-#include <vector>
 
 namespace garfield {
 class HeadersDict {
@@ -27,12 +26,8 @@ class HeadersDict {
   // request.
   std::string GetHeadersAsString() const;
 
-  const std::vector<std::pair<std::string, std::string> >& headers() const {
-    return headers_;
-  }
-
  private:
-  std::vector<std::pair<std::string, std::string> > headers_;
+  std::multimap<std::string, std::string> headers_;
 };
 }
 #endif  // SRC_HEADERS_H_

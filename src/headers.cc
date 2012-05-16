@@ -1,41 +1,27 @@
-#include <ctype.h>
-
 #include "./headers.h"
 
-namespace {
-std::string ToLowercase(const std::string &input) {
-  std::string out;
-  for (char c : input) {
-    out += tolower(c);
-  }
-  return out;
-}
-}
+#include <utility>
 
 namespace garfield {
 std::string HeadersDict::GetHeader(const std::string &name) const {
-  std::string lower = ToLowercase(name);
-  for (auto pair : headers_) {
-    if (lower == ToLowercase(pair.first)) {
-      return pair.second;
-    }
+  auto it = headers_.find(name);
+  if (it == headers_.end()) {
+    return "";
   }
-  return "";
+  return it->second;
 }
 
 void HeadersDict::SetHeader(const std::string &name, const std::string &val) {
-  std::string lower = ToLowercase(name);
-  for (std::pair<std::string, std::string> &pair : headers_) {
-    if (lower == ToLowercase(pair.first)) {
-      pair.second = val;
-      return;
-    }
+  auto pos = headers_.lower_bound(name);
+  if (pos != headers_.end() && pos->first == name) {
+    pos->second = val;
+  } else {
+    headers_.insert(pos, std::make_pair(name, val));
   }
-  headers_.push_back(std::make_pair(name, val));
 }
 
 void HeadersDict::AddHeader(const std::string &name, const std::string &val) {
-  headers_.push_back(std::make_pair(name, val));
+  headers_.insert(std::make_pair(name, val));
 }
 
 std::string HeadersDict::GetHeadersAsString() const {
