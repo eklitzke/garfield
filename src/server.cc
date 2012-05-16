@@ -82,7 +82,8 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
   }
 
   Response *resp = new Response();
-  resp->headers()->AddHeader("Server", "garfield/0.1");
+  resp->headers()->AddHeader(
+      "Server", "garfield/0.1 (+https://github.com/eklitzke/garfield)");
   resp->headers()->AddHeader("Connection", "close");
   resp->headers()->AddHeader("Content-Type", "text/html");
   handler(req, resp);
