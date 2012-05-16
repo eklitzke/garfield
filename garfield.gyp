@@ -21,6 +21,7 @@
         'src/request.cc',
         'src/response.cc',
         'src/server.cc',
+        'src/time.cc',
       ],
     },
     {
@@ -34,6 +35,7 @@
         'src/request.cc',
         'src/response.cc',
         'src/server.cc',
+        'src/time.cc',
       ],
     },
     {

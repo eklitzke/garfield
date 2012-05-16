@@ -2,7 +2,6 @@
 
 #include "./server.h"
 
-#include <boost/date_time/local_time/local_time.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <iostream>
@@ -14,6 +13,7 @@
 #include "./logging.h"
 #include "./request.h"
 #include "./response.h"
+#include "./time.h"
 
 namespace {
 const char* FmtLogField(const std::string &field) {
@@ -101,6 +101,7 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     send_bufs.push_back(boost::asio::buffer(chunk, chunk.size()));
     bytes += chunk.size();
   }
+  resp->headers()->AddHeader("Date", GetRFC1123Time());
   resp->headers()->SetHeader("Content-Length", boost::lexical_cast<std::string>(bytes));
   std::string hdrs = resp->headers()->GetHeadersAsString();
   send_bufs.insert(send_bufs.begin() + 1, boost::asio::buffer(hdrs, hdrs.size()));
@@ -118,14 +119,9 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
 
   boost::posix_time::time_duration td = (
       boost::posix_time::microsec_clock::universal_time()- req->connection_time());
-  boost::local_time::local_time_facet *facet(
-      new boost::local_time::local_time_facet("%Y-%m-%d %H:%M:%S.%f"));
-  std::stringstream date_stream;
-  date_stream.imbue(std::locale(date_stream.getloc(), facet));
-  date_stream << boost::local_time::local_microsec_clock::local_time(boost::local_time::time_zone_ptr());
   Log(ACCESS, "%s [%s] \"%s %s HTTP/1.%d\" %d %zd %ld \"%s\" \"%s\"",
       req->peername.c_str(),
-      date_stream.str().c_str(),
+      GetLogTime().c_str(),
       req->method.c_str(),
       req->path.c_str(),
       req->version.second,
