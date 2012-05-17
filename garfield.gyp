@@ -1,7 +1,19 @@
 # -*- python -*-
 {
+  'variables': {
+    'lib_sources': [
+      'src/connection.cc',
+      'src/handlers.cc',
+      'src/headers.cc',
+      'src/logging.cc',
+      'src/request.cc',
+      'src/response.cc',
+      'src/server.cc',
+      'src/time.cc',
+    ],
+  },
   'target_defaults': {
-    'cflags': ['-pedantic', '-Wall', '-std=c++0x'],
+    'cflags': ['-pedantic', '-Wall', '-Werror', '-std=c++0x'],
     'libraries': [
       '-lboost_system',
       '-lboost_regex',
@@ -13,30 +25,12 @@
       'type': 'shared_library',
       'cflags': ['-fPIC'],
       'target_name': 'libgarfield',
-      'sources': [
-        'src/connection.cc',
-        'src/handlers.cc',
-        'src/headers.cc',
-        'src/logging.cc',
-        'src/request.cc',
-        'src/response.cc',
-        'src/server.cc',
-        'src/time.cc',
-      ],
+      'sources': ['<@(lib_sources)'],
     },
     {
       'type': 'static_library',
       'target_name': 'garfield_static',
-      'sources': [
-        'src/connection.cc',
-        'src/handlers.cc',
-        'src/headers.cc',
-        'src/logging.cc',
-        'src/request.cc',
-        'src/response.cc',
-        'src/server.cc',
-        'src/time.cc',
-      ],
+      'sources': ['<@(lib_sources)'],
     },
     {
       'target_name': 'example-server',
