@@ -45,25 +45,23 @@ void HTTPClient::Run(boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
   request_ = "GET ";
   request_ += path_;
   request_ += " HTTP/1.1\r\nHost: localhost\r\n\r\n";
-  boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-  boost::asio::async_connect(sock_, endpoint,
+  boost::asio::async_connect(sock_, endpoint_iterator,
                              std::bind(&HTTPClient::OnConnect, this,
                                        std::placeholders::_1,
-                                       ++endpoint_iterator));
+                                       std::placeholders::_2));
 }
 
 void HTTPClient::OnConnect(const boost::system::error_code &error,
                            boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
   if (!error) {
     TryGet();
-  } else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator()) {
-    boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-    boost::asio::async_connect(sock_, endpoint,
+    //} else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator()) {
+  } else {
+    std::cout << error << std::endl;
+    boost::asio::async_connect(sock_, endpoint_iterator,
                                std::bind(&HTTPClient::OnConnect, this,
                                          std::placeholders::_1,
-                                         ++endpoint_iterator));
-  } else {
-    assert(!error);
+                                         std::placeholders::_2));
   }
 }
 
