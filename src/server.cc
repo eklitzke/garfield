@@ -108,7 +108,9 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     bytes += chunk.size();
   }
   resp->headers()->AddHeader("Date", GetRFC1123Time());
-  resp->headers()->SetHeader("Content-Length", boost::lexical_cast<std::string>(bytes));
+  if (!resp->suppress_content_length()) {
+    resp->headers()->SetHeader("Content-Length", boost::lexical_cast<std::string>(bytes));
+  }
   std::string hdrs = resp->headers()->GetHeadersAsString();
   send_bufs.insert(send_bufs.begin() + 1, boost::asio::buffer(hdrs, hdrs.size()));
 

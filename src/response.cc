@@ -6,7 +6,7 @@
 
 namespace garfield {
 Response::Response()
-    :status_(200) {
+    :status_(200), suppress_content_length_(false) {
 }
 
 void Response::Write(const std::string &msg) {
@@ -141,5 +141,16 @@ std::string Response::GetStatusName() {
       break;
   }
   return name;
+}
+
+void Response::NotFound() {
+  status_ = 404;
+  headers_.SetHeader("Content-Type", "text/plain");
+  Write("The page you were looking for could not be found.\n");
+}
+
+void Response::NotModified() {
+  status_ = 304;
+  suppress_content_length_ = true;
 }
 }

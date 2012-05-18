@@ -160,17 +160,11 @@ std::string GuessMimeType(const std::string &extension) {
     return it->second;
   }
 }
-
-void NotFound(garfield::Response *resp) {
-  resp->set_status(404);
-  resp->headers()->SetHeader("Content-Type", "text/plain");
-  resp->Write("The page you were looking for could not be found.\n");
-}
 }
 
 namespace garfield {
 void NotFoundHandler(Request *req, Response *resp) {
-  NotFound(resp);
+  resp->NotFound();
 }
 
 void StaticFileHandler(Request *req, Response *resp) {
@@ -179,12 +173,12 @@ void StaticFileHandler(Request *req, Response *resp) {
     path = path.substr(1, path.size() - 1);
   }
   if (path.empty()) {
-    NotFound(resp);
+    resp->NotFound();
   } else {
     std::unique_ptr<char[]> rp_buf(new char[PATH_MAX]);
     char *rp_cstr = realpath(path.c_str(), rp_buf.get());
     if (rp_cstr == nullptr) {
-      NotFound(resp);
+      resp->NotFound();
       return;
     }
     std::string rp(rp_cstr);
@@ -194,13 +188,25 @@ void StaticFileHandler(Request *req, Response *resp) {
     
     // Ensure that the realpath is in a subdirectory of the current directory
     if (rp.substr(0, curdir.length()) != curdir) {
-      NotFound(resp);
+      resp->NotFound();
     } else {
       std::time_t mtime = boost::filesystem::last_write_time(rp_cstr);
-      resp->headers()->SetHeader("Last-Modified", GetRFC1123Time(mtime));
+      std::string modified_time = GetRFC1123Time(mtime);
+      resp->headers()->SetHeader("Last-Modified", modified_time);
+
+      // The RFC says we're allowed to be lazy and do an exact string
+      // comparison, rather than parse the If-Modified-Since header to a real
+      // time and do a comparison. In some ways this kind of makes sense anyway,
+      // since if somehow an mtime got altered to be older (e.g. extracting a
+      // file from a tarball), it's plausible that the contents have changed.
+      if (req->headers()->GetHeader("If-Modified-Since") == modified_time) {
+        resp->NotModified();
+        return;
+      }
+
       FILE *f = fopen(rp_cstr, "r");
       if (f == nullptr) {
-        NotFound(resp);
+        resp->NotFound();
         return;
       }
 
