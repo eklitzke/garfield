@@ -75,6 +75,9 @@ void Connection::OnHeaders(Request *req,
       req->method = what[1];
       req->path = what[2];
       req->version = std::make_pair(1, what[3] == "0" ? 0 : 1);
+      if (what[3] == "0") {
+        keep_alive_ = false;  // Force non-keep alive for HTTP/1.0
+      }
     } else if (line == "") {
       break;
     } else {

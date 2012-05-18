@@ -68,6 +68,7 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     delete req;
     return;
   }
+  conn->set_state(PROCESSING);
 
   for (RequestTransform transform : request_transforms_) {
     transform(req);
@@ -84,7 +85,11 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
   Response *resp = new Response();
   resp->headers()->AddHeader(
       "Server", "garfield/0.1 (+https://github.com/eklitzke/garfield)");
-  resp->headers()->AddHeader("Connection", "close");
+  if (!conn->keep_alive()) {
+    // Only send the Connection: header for "Connection: close", since
+    // "Connection: keep-alive" is the default/assumed behavior.
+    resp->headers()->AddHeader("Connection", "close");
+  }
   resp->headers()->AddHeader("Content-Type", "text/html");
   handler(req, resp);
 
@@ -112,6 +117,7 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     expected_size += boost::asio::buffer_size(buf);
   }
 
+  conn->set_state(WRITING_RESPONSE);
   boost::asio::async_write(*conn->sock(), send_bufs,
                            std::bind(&HTTPServer::OnWrite, this, conn, req,
                                      resp, expected_size,
@@ -145,8 +151,14 @@ void HTTPServer::OnWrite(Connection *conn, Request *req, Response *resp,
 	Log(ERROR, "expected to write %zd bytes during request, but only wrote %zd",
 		expected_size, bytes_transferred);
   }
-  delete conn;
   delete req;
   delete resp;
+
+  if (!conn->keep_alive()) {
+    delete conn;
+  } else {
+    conn->set_state(UNCONNECTED);
+    conn->NotifyConnected();
+  }
 }
 }

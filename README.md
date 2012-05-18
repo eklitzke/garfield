@@ -60,6 +60,5 @@ Limitations
 
 Garfield does not currently support any of the following features:
 
-* Keep-Alive connections
 * Chunked transfer-encoding
 * gzip/deflate encoding, or any other transforms

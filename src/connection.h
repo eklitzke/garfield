@@ -43,6 +43,9 @@ class Connection {
   // Getters and Setters
   boost::asio::ip::tcp::socket* sock() const { return sock_; }
 
+  State state() const { return state_; }
+  void set_state(State state) { state_ = state; }
+
   bool keep_alive() const { return keep_alive_; }
   void set_keep_alive(bool keep_alive) { keep_alive_ = keep_alive; }
 
