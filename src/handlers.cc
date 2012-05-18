@@ -5,8 +5,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <boost/filesystem/operations.hpp>
+
+#include <ctime>
 #include <map>
 #include <utility>
+
+#include "./time.h"
 
 namespace {
 #ifndef PATH_MAX
@@ -191,6 +196,8 @@ void StaticFileHandler(Request *req, Response *resp) {
     if (rp.substr(0, curdir.length()) != curdir) {
       NotFound(resp);
     } else {
+      std::time_t mtime = boost::filesystem::last_write_time(rp_cstr);
+      resp->headers()->SetHeader("Last-Modified", GetRFC1123Time(mtime));
       FILE *f = fopen(rp_cstr, "r");
       if (f == nullptr) {
         NotFound(resp);

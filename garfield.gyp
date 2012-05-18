@@ -15,6 +15,7 @@
   'target_defaults': {
     'cflags': ['-pedantic', '-Wall', '-Werror', '-std=c++0x'],
     'libraries': [
+      '-lboost_filesystem',
       '-lboost_system',
       '-lboost_regex',
       '-pthread',
