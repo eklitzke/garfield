@@ -2,13 +2,13 @@
 
 #include "./connection.h"
 
+#include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
 #include <cassert>
 #include <iterator>
 #include <fstream>
 #include <functional>
-#include <iostream>
 
 #include "./logging.h"
 
@@ -46,7 +46,14 @@ void Connection::OnHeaders(Request *req,
                            std::size_t bytes_transferred) {
   assert(state_ == WAITING_FOR_HEADERS);
   if (err) {
-    std::cerr << "system error" << std::endl;
+    // A closed connection is normal -- for instance, during HTTP keep-alive,
+    // clients will unexpectedly disconnect when they're done sending
+    // requests. Therefore, we ignore these errors, but log all other ones.
+    if (err != boost::asio::error::connection_reset &&
+        err != boost::asio::error::eof) {
+      std::string err_name = boost::lexical_cast<std::string>(err);
+      Log(ERROR, "system error in OnHeaders, %s", err_name.c_str());
+    }
     callback_(this, req, SYSTEM_ERROR);
     return;
   }
@@ -59,7 +66,7 @@ void Connection::OnHeaders(Request *req,
   while (true) {
     std::string::size_type newline = data.find("\r\n", offset);
     if (newline == std::string::npos) {
-      std::cerr << "malformed header line" << std::endl;
+      Log(ERROR, "malformed header line!");
       callback_(this, req, MALFORMED_HEADER_LINE);
       return;
     }
@@ -68,7 +75,7 @@ void Connection::OnHeaders(Request *req,
     if (offset == 0) {
       // we're reading the first line of the request
       if (!boost::regex_match(line, what, request_line)) {
-        std::cerr << "malformed first line" << std::endl;
+        Log(ERROR, "malformed first line!");
         callback_(this, req, MALFORMED_FIRST_LINE);
         return;
       }
@@ -82,7 +89,7 @@ void Connection::OnHeaders(Request *req,
       break;
     } else {
       if (!boost::regex_match(line, what, header_line)) {
-        std::cerr << "malformed header line" << std::endl;
+        Log(ERROR, "malformed header line!");
         callback_(this, req, MALFORMED_HEADER_LINE);
         return;
       }
