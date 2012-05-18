@@ -40,12 +40,17 @@ class Connection {
                  const boost::system::error_code &err,
                  std::size_t bytes_transferred);
 
+  // Getters and Setters
   boost::asio::ip::tcp::socket* sock() const { return sock_; }
+
+  bool keep_alive() const { return keep_alive_; }
+  void set_keep_alive(bool keep_alive) { keep_alive_ = keep_alive; }
 
  private:
   State state_;
   boost::asio::ip::tcp::socket *sock_;
   RequestCallback callback_;
+  bool keep_alive_;
 };
 }
 

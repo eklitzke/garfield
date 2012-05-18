@@ -20,9 +20,9 @@ const boost::regex header_line("^([-a-zA-Z0-9_]+):\\s+(.*?)$");
 namespace garfield {
 Connection::Connection(boost::asio::ip::tcp::socket *sock,
                        RequestCallback callback)
-    :state_(UNCONNECTED), sock_(sock), callback_(callback) {
+    :state_(UNCONNECTED), sock_(sock), callback_(callback),
+     keep_alive_(true) {
 }
-
 
 void Connection::NotifyConnected() {
   assert(state_ == UNCONNECTED);
@@ -83,15 +83,17 @@ void Connection::OnHeaders(Request *req,
         callback_(this, req, MALFORMED_HEADER_LINE);
         return;
       }
-      std::string hdr_name = what[1];
+      HeaderKey hdr_key(what[1]);
       std::string hdr_val = what[2];
-      req->headers()->SetHeader(hdr_name, hdr_val);
+      req->headers()->SetHeader(hdr_key, hdr_val);
+      if (hdr_key.norm_key == "connection" && hdr_val == "close") {
+        keep_alive_ = false;
+      }
     }
     offset = newline + 2;
   }
   callback_(this, req, OK);
 }
-
 
 Connection::~Connection() {
   sock_->cancel();
