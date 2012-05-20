@@ -22,12 +22,27 @@ namespace garfield {
 
 typedef std::function<void(Request *)> RequestTransform;
 
+class RouteSpec {
+ public:
+  RouteSpec(const std::string &verb, const std::string &path, Handler handler);
+
+  // Returns the handler if the verb/path match, or a nullptr if there is no
+  // match.
+  Handler Match(const std::string &verb, const std::string &path);
+
+ private:
+  std::string verb_;
+  boost::regex path_;
+  Handler handler_;
+};
+
 class HTTPServer {
  public:
   HTTPServer(boost::asio::io_service *io_service);
 
-  // Add a route to the server
-  void AddRoute(const std::string &route, Handler handler);
+  // Add a route to the server.
+  void AddRoute(const std::string &verb, const std::string &path,
+                Handler handler);
 
   // Add a Request transform; this transform will be run on the request before
   // the request is mapped.
@@ -39,7 +54,7 @@ class HTTPServer {
   void Bind(int port);
 
  private:
-  std::vector<std::pair<boost::regex, Handler> > routes_;
+  std::vector<RouteSpec> routes_;
   std::vector<RequestTransform> request_transforms_;
   boost::asio::io_service &io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;

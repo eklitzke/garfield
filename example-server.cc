@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
   garfield::SetLogger(garfield::StdErrLogger);
   garfield::HTTPServer server(&io);
   server.Bind(vm["port"].as<int>());
-  server.AddRoute("/", HelloWorldHandler);
-  server.AddRoute(".*", garfield::StaticFileHandler);
+  server.AddRoute("GET", "/", HelloWorldHandler);
+  server.AddRoute("GET", ".*", garfield::StaticFileHandler);
   io.run();  // start the main loop
   return 0;
 }

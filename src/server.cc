@@ -26,11 +26,23 @@ const char* FmtLogField(const std::string &field) {
 }
 
 namespace garfield {
+RouteSpec::RouteSpec(const std::string &verb, const std::string &path,
+                     Handler handler)
+    :verb_(verb), path_(boost::regex(path)), handler_(handler) {
+}
+
+Handler RouteSpec::Match(const std::string &verb, const std::string &path) {
+  if (verb == verb_ && boost::regex_match(path, path_)) {
+    return handler_;
+  }
+  return nullptr;
+}
+
 HTTPServer::HTTPServer(boost::asio::io_service *io_service)
     :io_service_(*io_service), acceptor_(*io_service) {
 }
-void HTTPServer::AddRoute(const std::string &route, Handler handler) {
-  routes_.push_back(std::make_pair(boost::regex(route), handler));
+void HTTPServer::AddRoute(const std::string &verb, const std::string &path, Handler handler) {
+  routes_.push_back(RouteSpec(verb, path, handler));
 }
 
 void HTTPServer::Bind(int port) {
@@ -74,12 +86,15 @@ void HTTPServer::OnRequest(Connection *conn, Request *req, RequestError err) {
     transform(req);
   }
 
-  Handler handler = NotFoundHandler;
+  Handler handler = nullptr;
   for (auto route : routes_) {
-    if (boost::regex_match(req->path, route.first)) {
-      handler = route.second;
+    handler = route.Match(req->method, req->path);
+    if (handler != nullptr) {
       break;
     }
+  }
+  if (handler == nullptr) {
+    handler = NotFoundHandler;
   }
 
   Response *resp = new Response();

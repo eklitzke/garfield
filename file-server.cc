@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
                                          vm["index-file"].as<std::string>(),
                                          std::placeholders::_1));
   }
-  server.AddRoute(".*", garfield::StaticFileHandler);
+  server.AddRoute("GET", ".*", garfield::StaticFileHandler);
   server.Bind(vm["port"].as<int>());
   if (vm.count("daemon")) {
     Daemonize(&io, dir);
