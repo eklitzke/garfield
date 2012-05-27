@@ -15,13 +15,42 @@
 namespace {
 const boost::regex request_line("^(\\u+) (.*) HTTP/1\\.([01])$");
 const boost::regex header_line("^([-a-zA-Z0-9_]+):\\s+(.*?)$");
+
+class ContentLengthMatcher {
+ public:
+  explicit ContentLengthMatcher(std::size_t expected)
+      :expected_(expected), seen_(0) {}
+
+  template <typename Iterator>
+  std::pair<Iterator, bool> operator() (Iterator begin, Iterator end) {
+    seen_ += end - begin;
+    if (seen_ >= expected_) {
+      return std::make_pair(end, true);
+    }
+    return std::make_pair(end, false);
+  }
+
+ private:
+  std::size_t expected_;
+  std::size_t seen_;
+};
+
+namespace boost {
+namespace asio {
+template <> struct is_match_condition<
+  decltype(std::bind(&ContentLengthMatcher::match_version, shared_ptr<TcpMimeConnection>(), _1, _2)
+                    )>
+  : public boost::true_type {};
+  ContentLengthMatcher>
+    : public boost::true_type {};
+}
 }
 
 namespace garfield {
 Connection::Connection(boost::asio::ip::tcp::socket *sock,
                        RequestCallback callback)
     :state_(UNCONNECTED), sock_(sock), callback_(callback),
-     keep_alive_(true) {
+     keep_alive_(true), content_length_(0) {
 }
 
 void Connection::NotifyConnected() {
@@ -45,19 +74,9 @@ void Connection::OnHeaders(Request *req,
                            const boost::system::error_code &err,
                            std::size_t bytes_transferred) {
   assert(state_ == WAITING_FOR_HEADERS);
-  if (err) {
-    // A closed connection is normal -- for instance, during HTTP keep-alive,
-    // clients will unexpectedly disconnect when they're done sending
-    // requests. Therefore, we ignore these errors, but log all other ones.
-    if (err != boost::asio::error::connection_reset &&
-        err != boost::asio::error::eof) {
-      std::string err_name = boost::lexical_cast<std::string>(err);
-      Log(ERROR, "system error in OnHeaders, %s", err_name.c_str());
-    }
-    callback_(this, req, SYSTEM_ERROR);
+  if (CheckBoostError(req, err)) {
     return;
   }
-
   std::string data(
       (std::istreambuf_iterator<char>(&req->streambuf)),
       std::istreambuf_iterator<char>());
@@ -98,15 +117,61 @@ void Connection::OnHeaders(Request *req,
       req->headers()->SetHeader(hdr_key, hdr_val);
       if (hdr_key.norm_key == "connection" && hdr_val == "close") {
         keep_alive_ = false;
+      } else if (hdr_key.norm_key == "content-length") {
+        content_length_ = boost::lexical_cast<std::size_t>(hdr_val);
       }
     }
     offset = newline + 2;
   }
-  callback_(this, req, OK);
+  if (content_length_) {
+    state_ = WAITING_FOR_BODY;
+    boost::asio::async_read_until(
+        *sock_,
+        req->streambuf,
+        ContentLengthMatcher(content_length_),
+        std::bind(&Connection::OnBody, this, req,
+                  std::placeholders::_1,
+                  std::placeholders::_2));
+  } else {
+    state_ = PROCESSING;
+    callback_(this, req, OK);
+  }
+}
+
+void Connection::OnBody(Request *req,
+                        const boost::system::error_code &err,
+                        std::size_t bytes_transferred) {
+  assert(state_ == WAITING_FOR_BODY);
+  body_ = std::string((std::istreambuf_iterator<char>(&req->streambuf)),
+                      std::istreambuf_iterator<char>());
+
+  if (bytes_transferred > content_length_) {
+    callback_(this, req, TOO_MUCH_DATA);
+  } else {
+    state_ = PROCESSING;
+    callback_(this, req, OK);
+  }
 }
 
 Connection::~Connection() {
   sock_->cancel();
   delete sock_;
+}
+
+bool Connection::CheckBoostError(Request *req,
+                                 const boost::system::error_code &err) {
+  if (err) {
+    // If the error is because the client closed its connection, it's not our
+    // fault, so do nothing at all. If the error is something else, log it.
+    if (err != boost::asio::error::connection_reset &&
+        err != boost::asio::error::eof) {
+      std::string err_name = boost::lexical_cast<std::string>(err);
+      Log(ERROR, "system error in OnBody, %s", err_name.c_str());
+      
+      callback_(this, req, SYSTEM_ERROR);
+    }
+    return true;
+  }
+  return false;
 }
 }

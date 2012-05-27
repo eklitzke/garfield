@@ -23,7 +23,8 @@ enum RequestError {
   OK                     = 0,
   SYSTEM_ERROR           = 1,
   MALFORMED_FIRST_LINE   = 2,
-  MALFORMED_HEADER_LINE  = 3
+  MALFORMED_HEADER_LINE  = 3,
+  TOO_MUCH_DATA          = 4   // client sent too much data
 };
 
 class Connection;
@@ -36,10 +37,6 @@ class Connection {
                       RequestCallback callback);
   ~Connection();
   void NotifyConnected();
-  void OnHeaders(Request *req,
-                 const boost::system::error_code &err,
-                 std::size_t bytes_transferred);
-
   // Getters and Setters
   boost::asio::ip::tcp::socket* sock() const { return sock_; }
 
@@ -49,11 +46,33 @@ class Connection {
   bool keep_alive() const { return keep_alive_; }
   void set_keep_alive(bool keep_alive) { keep_alive_ = keep_alive; }
 
+  std::size_t content_length() const { return content_length_; }
+  const std::string& body() const { return body_; }
+
  private:
   State state_;
   boost::asio::ip::tcp::socket *sock_;
   RequestCallback callback_;
   bool keep_alive_;
+  std::size_t content_length_;
+  std::string body_;
+
+  // Check the boost error code and handle it appropriately. What this means is
+  // logging the error unless it's a client-side thing (e.g. if the client
+  // prematurely closes their connection, we'll get a boost error, but it's not
+  // our fault -- so that isn't loged).
+  //
+  // Returns true if there was an error and the caller should "abort" what it's
+  // doing, false otherwise.
+  bool CheckBoostError(Request *req, const boost::system::error_code &err);
+
+  void OnHeaders(Request *req,
+                 const boost::system::error_code &err,
+                 std::size_t bytes_transferred);
+
+  void OnBody(Request *req,
+              const boost::system::error_code &err,
+              std::size_t bytes_transferred);
 };
 }
 
