@@ -3,6 +3,7 @@
 #ifndef SRC_GARFIELD_H_
 #define SRC_GARFIELD_H_
 
+#include "./daemon.h"
 #include "./handlers.h"
 #include "./logging.h"
 #include "./request.h"

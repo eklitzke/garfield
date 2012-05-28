@@ -3,6 +3,7 @@
   'variables': {
     'lib_sources': [
       'src/connection.cc',
+      'src/daemon.cc',
       'src/handlers.cc',
       'src/headers.cc',
       'src/logging.cc',
